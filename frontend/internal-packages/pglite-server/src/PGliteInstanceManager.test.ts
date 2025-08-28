@@ -107,6 +107,82 @@ describe('PGliteInstanceManager', () => {
     // Should still attempt to execute (though it will fail)
     expect(results).toHaveLength(1)
     expect(results[0]?.success).toBe(false)
-    expect(results[0]?.result).toHaveProperty('error')
+    expect(results[0]?.result).toStrictEqual({
+      error: 'Parse error: syntax error at or near "INVALID"',
+    })
+  })
+
+  describe('Transaction Error Handling', () => {
+    it('should FAIL when using explicit BEGIN without proper error handling', async () => {
+      // This test demonstrates the actual problem when BEGIN is used
+      const manager = new PGliteInstanceManager()
+
+      const sql = `
+        CREATE TABLE test_problem (id INT PRIMARY KEY, value TEXT);
+        BEGIN;  -- Start explicit transaction
+        INSERT INTO test_problem (id, value) VALUES (1, 'first');
+        INSERT INTO test_problem (id, value) VALUES (1, 'duplicate'); -- Will fail
+        INSERT INTO test_problem (id, value) VALUES (2, 'second'); -- Should work but won't due to transaction abort
+        COMMIT; -- Will succeed but transaction was already aborted
+        SELECT COUNT(*) FROM test_problem; -- Will show only 0 rows (transaction rolled back)
+      `
+
+      const results = await manager.executeQuery(sql)
+
+      const normalizedResults = results.map((r) => ({
+        sql: r.sql,
+        success: r.success,
+        result: r.result,
+      }))
+
+      // This test demonstrates the transaction abort problem with explicit BEGIN
+      expect(normalizedResults).toStrictEqual([
+        {
+          sql: 'CREATE TABLE test_problem (id INT PRIMARY KEY, value TEXT)',
+          success: true,
+          result: { rows: [], fields: [], affectedRows: 0 },
+        },
+        {
+          sql: 'BEGIN',
+          success: true,
+          result: { rows: [], fields: [], affectedRows: 0 },
+        },
+        {
+          sql: "-- Start explicit transaction\n        INSERT INTO test_problem (id, value) VALUES (1, 'first')",
+          success: true,
+          result: { rows: [], fields: [], affectedRows: 1 },
+        },
+        {
+          sql: "INSERT INTO test_problem (id, value) VALUES (1, 'duplicate')",
+          success: false,
+          result: {
+            error:
+              'duplicate key value violates unique constraint "test_problem_pkey"',
+          },
+        },
+        {
+          sql: "-- Will fail\n        INSERT INTO test_problem (id, value) VALUES (2, 'second')",
+          success: false,
+          result: {
+            error:
+              'current transaction is aborted, commands ignored until end of transaction block',
+          },
+        },
+        {
+          sql: "-- Should work but won't due to transaction abort\n        COMMIT",
+          success: true,
+          result: { rows: [], fields: [], affectedRows: 0 },
+        },
+        {
+          sql: '-- Will succeed but transaction was already aborted\n        SELECT COUNT(*) FROM test_problem',
+          success: true,
+          result: {
+            rows: [{ count: 0 }], // 0 because the transaction was rolled back
+            fields: [{ name: 'count', dataTypeID: 20 }],
+            affectedRows: 0,
+          },
+        },
+      ])
+    })
   })
 })

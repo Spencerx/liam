@@ -335,7 +335,8 @@ begin
             }
           }
         },
-        "enums": {}
+        "enums": {},
+        "extensions": {}
       }'::jsonb,
       current_timestamp,
       'abc123def456',
@@ -479,7 +480,8 @@ begin
             }
           }
         },
-        "enums": {}
+        "enums": {},
+        "extensions": {}
       }'::jsonb,
       'frontend/internal-packages/db/schema/schema.sql'
     );

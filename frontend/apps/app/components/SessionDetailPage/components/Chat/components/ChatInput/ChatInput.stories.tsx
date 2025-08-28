@@ -71,6 +71,7 @@ const dummySchema = {
       indexes: {},
     },
   },
+  extensions: {},
 }
 
 const meta = {

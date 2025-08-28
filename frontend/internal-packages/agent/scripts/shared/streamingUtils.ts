@@ -1,3 +1,4 @@
+import { gray } from 'yoctocolors'
 import { isMessageContentError } from '../../src/chat/workflow/utils/toolMessageUtils'
 import { hasProperty, isObject } from './scriptUtils'
 import type { Logger } from './types'
@@ -25,32 +26,96 @@ const getMessageType = (lastMessage: unknown): string => {
   return rawMessageType.toLowerCase().replace('message', '')
 }
 
+// Helper function to summarize tool arguments
+const getArgumentSummary = (args: unknown): string => {
+  // Pure type-based handling - no special cases for any tools
+
+  if (typeof args === 'string') {
+    return args.length > 50 ? `${args.slice(0, 47)}...` : args
+  }
+
+  if (Array.isArray(args)) {
+    return `${args.length} items`
+  }
+
+  if (isObject(args)) {
+    const keys = Object.keys(args)
+
+    // Single property
+    if (keys.length === 1) {
+      const key = keys[0]
+      if (!key) return '?'
+      const value = args[key]
+
+      // Array value
+      if (Array.isArray(value)) {
+        return `${key}: ${value.length} items`
+      }
+
+      // String value
+      if (typeof value === 'string') {
+        if (value.length <= 30) return `${key}: ${value}`
+        return `${key}: ${value.slice(0, 27)}...`
+      }
+
+      // Boolean/number value
+      if (typeof value === 'boolean' || typeof value === 'number') {
+        return `${key}: ${value}`
+      }
+
+      // Object value
+      if (isObject(value)) {
+        return `${key}: {...}`
+      }
+
+      // Null/undefined
+      if (value === null) return `${key}: null`
+      if (value === undefined) return `${key}: undefined`
+
+      return `${key}: ?`
+    }
+
+    // Multiple properties
+    if (keys.length <= 3) {
+      return keys.join(', ')
+    }
+
+    return `${keys.length} params`
+  }
+
+  // Primitive types
+  if (typeof args === 'boolean') return String(args)
+  if (typeof args === 'number') return String(args)
+  if (args === null) return 'null'
+  if (args === undefined) return 'undefined'
+
+  return ''
+}
+
 // Helper function to process tool calls
 const processToolCalls = (
   toolCalls: unknown[],
-): { names: string; args: unknown[] } => {
-  const processedCalls = toolCalls.map((call: unknown) => {
+): { tools: Array<{ name: string; summary: string }> } => {
+  const tools = toolCalls.map((call: unknown) => {
     if (isObject(call)) {
       const functionName =
         isObject(call['function']) && hasProperty(call['function'], 'name')
           ? call['function']['name']
           : call['name']
-      const toolName = functionName || 'unknown'
+      const toolName = String(functionName || 'unknown')
 
       const functionArgs =
         isObject(call['function']) && hasProperty(call['function'], 'arguments')
           ? call['function']['arguments']
           : call['args']
 
-      return { name: String(toolName), args: functionArgs }
+      const summary = getArgumentSummary(functionArgs)
+      return { name: toolName, summary }
     }
-    return { name: 'unknown', args: undefined }
+    return { name: 'unknown', summary: '' }
   })
 
-  const names = processedCalls.map((c) => c.name).join(', ')
-  const args = processedCalls.map((c) => c.args)
-
-  return { names, args }
+  return { tools }
 }
 
 // Helper function to extract content from message
@@ -119,7 +184,14 @@ const getToolName = (lastMessage: unknown): string => {
 // Helper function to log human message
 const logHumanMessage = (logger: Logger, content: string | undefined) => {
   if (content && typeof content === 'string') {
-    logger.info(`Request: ${content}`)
+    // Split content into lines and apply gray to each line
+    const lines = content.split('\n')
+    const grayLines = lines.map((line, index) => {
+      // Add ">" prefix only to the first line
+      const prefix = index === 0 ? '> ' : '  '
+      return gray(`${prefix}${line}`)
+    })
+    logger.info(grayLines.join('\n'))
   }
 }
 
@@ -133,19 +205,14 @@ const logAIMessage = (
   const hasToolCalls = Array.isArray(toolCalls) && toolCalls.length > 0
 
   if (hasToolCalls) {
-    const { names, args } = processToolCalls(toolCalls)
-    logger.info(`AI calling: ${names}`)
-    // Log arguments for each tool call
-    args.forEach((arg) => {
-      if (arg !== undefined) {
-        // For string arguments that look like JSON, they'll be parsed by JSON.stringify
-        // For objects, they'll be properly formatted
-        // This avoids the need for try-catch entirely
-        logger.info(`  Arguments: ${JSON.stringify(arg, null, 2)}`)
-      }
+    const { tools } = processToolCalls(toolCalls)
+    // Log each tool call in Claude Code format
+    tools.forEach((tool) => {
+      const argsSummary = tool.summary ? `(${tool.summary})` : ''
+      logger.info(`⏺ ${tool.name}${argsSummary}`)
     })
   } else if (content && typeof content === 'string' && content.trim()) {
-    logger.info(`AI response: ${content.trim()}`)
+    logger.info(`⏺ ${content.trim()}`)
   }
 }
 
@@ -159,13 +226,29 @@ const logToolMessage = (
 
   if (content && typeof content === 'string') {
     const isError = isMessageContentError(content)
+
+    // Clean up the message by removing redundant prefixes
+    const cleanMessage = content
+      .replace(/^[A-Za-z]+\s+(SUCCESS|ERROR):\s*/i, '') // Remove "toolName SUCCESS:" or "toolName ERROR:"
+      .replace(/^(Successfully|Error)\s+/i, '') // Remove "Successfully" or "Error" at the start
+      .trim()
+
+    // For multi-line content, format with proper indentation
+    const lines = cleanMessage.split('\n')
+    const formattedMessage =
+      lines.length > 1
+        ? lines
+            .map((line, index) => (index === 0 ? line : `    ${line}`))
+            .join('\n')
+        : cleanMessage
+
     if (isError) {
-      logger.error(`${String(toolName)} ERROR: ${content}`)
+      logger.error(`  ⎿ ❌ ${formattedMessage}`)
     } else {
-      logger.info(`${String(toolName)} SUCCESS: ${content}`)
+      logger.info(`  ⎿ ${formattedMessage}`)
     }
   } else {
-    logger.info(`${String(toolName)}: No response`)
+    logger.info(`  ⎿ No response from ${String(toolName)}`)
   }
 }
 

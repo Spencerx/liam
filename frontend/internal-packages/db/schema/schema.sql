@@ -1120,6 +1120,10 @@ CREATE TABLE IF NOT EXISTS "public"."building_schemas" (
 ALTER TABLE "public"."building_schemas" OWNER TO "postgres";
 
 
+COMMENT ON TABLE "public"."building_schemas" IS 'Building schemas with tables, enums, and extensions information stored as JSONB';
+
+
+
 CREATE TABLE IF NOT EXISTS "public"."checkpoint_blobs" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
     "thread_id" "text" NOT NULL,

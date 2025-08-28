@@ -17,7 +17,7 @@ describe('convertToSchema', () => {
 
       const parseResult = await parse(sql)
       if (parseResult.parse_tree?.stmts.length > 0) {
-        const schema = { tables: {}, enums: {} }
+        const schema = { tables: {}, enums: {}, extensions: {} }
 
         // Wrong offset simulates pre-fix bug condition
         const wrongChunkOffset = 1000

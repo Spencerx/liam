@@ -85,6 +85,7 @@ const schema = {
       indexes: {},
     },
   },
+  extensions: {},
 }
 
 /**

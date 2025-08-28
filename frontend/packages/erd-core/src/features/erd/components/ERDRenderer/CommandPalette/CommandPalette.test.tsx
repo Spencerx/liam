@@ -28,6 +28,7 @@ const schema: SchemaProviderValue = {
       user_settings: aTable({ name: 'user_settings' }),
     },
     enums: {},
+    extensions: {},
   },
 }
 

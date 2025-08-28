@@ -133,7 +133,7 @@ export const processor: Processor = async (
   sql: string,
   chunkSize = CHUNK_SIZE,
 ) => {
-  const schema: Schema = { tables: {}, enums: {} }
+  const schema: Schema = { tables: {}, enums: {}, extensions: {} }
 
   const parseErrors: ProcessError[] = []
 

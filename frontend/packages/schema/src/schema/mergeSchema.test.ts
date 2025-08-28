@@ -33,6 +33,7 @@ describe('mergeSchemas', () => {
   const createSchema = (overrides: Partial<Schema> = {}): Schema => ({
     tables: {},
     enums: {},
+    extensions: {},
     ...overrides,
   })
 

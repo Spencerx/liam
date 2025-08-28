@@ -15,6 +15,7 @@ export const extractSchemaForTable = (table: Table, schema: Schema): Schema => {
         [table.name]: table,
       },
       enums: {},
+      extensions: {},
     }
   }
 
@@ -36,5 +37,6 @@ export const extractSchemaForTable = (table: Table, schema: Schema): Schema => {
   return {
     tables: relatedTables,
     enums: {},
+    extensions: {},
   }
 }

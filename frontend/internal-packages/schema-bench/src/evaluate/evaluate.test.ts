@@ -11,6 +11,7 @@ describe('evaluate', () => {
     async () => {
       const reference: Schema = {
         enums: {},
+        extensions: {},
         tables: {
           user: {
             name: 'user',
@@ -85,6 +86,7 @@ describe('evaluate', () => {
 
       const predict: Schema = {
         enums: {},
+        extensions: {},
         tables: {
           user: {
             name: 'user',
@@ -175,6 +177,7 @@ describe('evaluate', () => {
     async () => {
       const reference: Schema = {
         enums: {},
+        extensions: {},
         tables: {
           user_account: {
             name: 'user_account',
@@ -241,6 +244,7 @@ describe('evaluate', () => {
 
       const predict: Schema = {
         enums: {},
+        extensions: {},
         tables: {
           user: {
             name: 'user',
@@ -329,6 +333,7 @@ describe('evaluate', () => {
     async () => {
       const reference: Schema = {
         enums: {},
+        extensions: {},
         tables: {
           customer: {
             name: 'customer',
@@ -381,6 +386,7 @@ describe('evaluate', () => {
 
       const predict: Schema = {
         enums: {},
+        extensions: {},
         tables: {
           customer: {
             name: 'customer',
@@ -456,6 +462,7 @@ describe('evaluate', () => {
     async () => {
       const reference: Schema = {
         enums: {},
+        extensions: {},
         tables: {
           users: {
             name: 'users',
@@ -523,6 +530,7 @@ describe('evaluate', () => {
 
       const predict: Schema = {
         enums: {},
+        extensions: {},
         tables: {
           users: {
             name: 'users',
@@ -601,6 +609,7 @@ describe('evaluate', () => {
     async () => {
       const reference: Schema = {
         enums: {},
+        extensions: {},
         tables: {
           users: {
             name: 'users',
@@ -668,6 +677,7 @@ describe('evaluate', () => {
 
       const predict: Schema = {
         enums: {},
+        extensions: {},
         tables: {
           users: {
             name: 'users',
@@ -746,6 +756,7 @@ describe('evaluate', () => {
     async () => {
       const reference: Schema = {
         enums: {},
+        extensions: {},
         tables: {
           users: {
             name: 'users',
@@ -852,6 +863,7 @@ describe('evaluate', () => {
 
       const predict: Schema = {
         enums: {},
+        extensions: {},
         tables: {
           users: {
             name: 'users',
@@ -960,6 +972,7 @@ describe('evaluate', () => {
     async () => {
       const reference: Schema = {
         enums: {},
+        extensions: {},
         tables: {
           users: {
             name: 'users',
@@ -1027,6 +1040,7 @@ describe('evaluate', () => {
 
       const predict: Schema = {
         enums: {},
+        extensions: {},
         tables: {
           users: {
             name: 'users',

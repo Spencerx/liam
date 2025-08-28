@@ -57,7 +57,7 @@ export const createLogger = (logLevel: LogLevel) => ({
     if (LOG_LEVELS[logLevel] > LOG_LEVELS.DEBUG) return
 
     const timestamp = new Date().toISOString()
-    process.stdout.write(`\n🔍 [DEBUG] ${timestamp} ${message}\n`)
+    process.stdout.write(`\n🔍 [DEBUG] ${timestamp}\n${message}\n`)
     if (metadata) {
       process.stdout.write(`${JSON.stringify(metadata, null, 2)}\n`)
     }
@@ -66,7 +66,7 @@ export const createLogger = (logLevel: LogLevel) => ({
     if (LOG_LEVELS[logLevel] > LOG_LEVELS.INFO) return
 
     const timestamp = new Date().toISOString()
-    process.stdout.write(`\n✅ [INFO] ${timestamp} ${message}\n`)
+    process.stdout.write(`\n✅ [INFO] ${timestamp}\n${message}\n`)
     if (metadata) {
       process.stdout.write(`${JSON.stringify(metadata, null, 2)}\n`)
     }
@@ -75,14 +75,14 @@ export const createLogger = (logLevel: LogLevel) => ({
     if (LOG_LEVELS[logLevel] > LOG_LEVELS.WARN) return
 
     const timestamp = new Date().toISOString()
-    process.stdout.write(`\n⚠️  [WARN] ${timestamp} ${message}\n`)
+    process.stdout.write(`\n⚠️  [WARN] ${timestamp}\n${message}\n`)
     if (metadata) {
       process.stdout.write(`${JSON.stringify(metadata, null, 2)}\n`)
     }
   },
   error: (message: string, metadata?: Record<string, unknown>) => {
     const timestamp = new Date().toISOString()
-    process.stderr.write(`\n❌ [ERROR] ${timestamp} ${message}\n`)
+    process.stderr.write(`\n❌ [ERROR] ${timestamp}\n${message}\n`)
     if (metadata) {
       process.stderr.write(`${JSON.stringify(metadata, null, 2)}\n`)
     }
@@ -223,7 +223,7 @@ export const createBuildingSchema = (
   },
 ) => {
   const { supabaseClient, organization, designSession } = sessionData
-  const initialSchema: Schema = { tables: {}, enums: {} }
+  const initialSchema: Schema = { tables: {}, enums: {}, extensions: {} }
 
   return ResultAsync.fromPromise(
     supabaseClient

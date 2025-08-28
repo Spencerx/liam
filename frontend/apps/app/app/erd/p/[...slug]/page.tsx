@@ -10,6 +10,7 @@ import * as Sentry from '@sentry/nextjs'
 import { load } from 'cheerio'
 import type { Metadata } from 'next'
 import { cookies } from 'next/headers'
+import { notFound } from 'next/navigation'
 import * as v from 'valibot'
 import type { PageProps } from '@/app/types'
 import ERDViewer from './erdViewer'
@@ -41,7 +42,7 @@ export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
   const parsedParams = v.safeParse(paramsSchema, await params)
-  if (!parsedParams.success) throw new Error('Invalid parameters')
+  if (!parsedParams.success) notFound()
 
   const joinedPath = parsedParams.output.slug.join('/')
 
@@ -81,13 +82,13 @@ export default async function Page({
   searchParams: _searchParams,
 }: PageProps) {
   const parsedParams = v.safeParse(paramsSchema, await params)
-  if (!parsedParams.success) throw new Error('Invalid parameters')
+  if (!parsedParams.success) notFound()
 
   const joinedPath = parsedParams.output.slug.join('/')
 
   const url = `https://${joinedPath}`
 
-  const blankSchema = { tables: {}, enums: {} }
+  const blankSchema = { tables: {}, enums: {}, extensions: {} }
 
   const contentUrl = resolveContentUrl(url)
   const weCannotAccess = `Our signal's lost in the void! No access at this time..`
@@ -193,7 +194,7 @@ export default async function Page({
   for (const error of errors) {
     Sentry.captureException(error)
   }
-  const errorObjects = errors.map((error) => ({
+  const errorObjects = errors.map((error: Error) => ({
     name: error.name,
     message: error.message,
   }))

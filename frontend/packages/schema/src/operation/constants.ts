@@ -36,4 +36,5 @@ export const PATH_PATTERNS = {
   ENUM_NAME: /^\/enums\/([^/]+)\/name$/,
   ENUM_VALUES: /^\/enums\/([^/]+)\/values$/,
   ENUM_COMMENT: /^\/enums\/([^/]+)\/comment$/,
+  EXTENSION_BASE: /^\/extensions\/([^/]+)$/,
 } as const

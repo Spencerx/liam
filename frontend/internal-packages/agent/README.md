@@ -63,7 +63,7 @@ interface WorkflowState {
 1. **leadAgent**: Lead Agent subgraph that routes requests to appropriate specialized agents
 2. **pmAgent**: PM Agent subgraph that handles requirements analysis - contains analyzeRequirements and invokeSaveArtifactTool nodes
 3. **dbAgent**: DB Agent subgraph that handles database schema design - contains designSchema and invokeSchemaDesignTool nodes (performed by dbAgent)
-4. **qaAgent**: QA Agent subgraph that handles testing and validation - contains generateUsecase, prepareDML, and validateSchema nodes (performed by qaAgent)
+4. **qaAgent**: QA Agent subgraph that handles testing and validation - contains generateTestcase, generateDml, invokeSaveDmlTool, and validateSchema nodes (performed by qaAgent)
 5. **leadAgent (summarize)**: When QA completes, Lead Agent summarizes the workflow by generating a comprehensive summary
 
 ## Lead Agent Subgraph
@@ -228,13 +228,16 @@ The `qaAgent` node is implemented as a **LangGraph subgraph** that encapsulates 
 graph TD;
 	__start__([<p>__start__</p>]):::first
 	generateTestcase(generateTestcase)
-	prepareDML(prepareDML)
+	generateDml(generateDml)
+	invokeSaveDmlTool(invokeSaveDmlTool)
 	validateSchema(validateSchema)
 	__end__([<p>__end__</p>]):::last
 	__start__ --> generateTestcase;
-	generateTestcase --> prepareDML;
-	prepareDML --> validateSchema;
+	generateTestcase --> generateDml;
+	invokeSaveDmlTool --> generateDml;
 	validateSchema --> __end__;
+	generateDml -.-> invokeSaveDmlTool;
+	generateDml -.-> validateSchema;
 	classDef default fill:#f2f0ff,line-height:1.2;
 	classDef first fill-opacity:0;
 	classDef last fill:#bfb6fc;
@@ -248,13 +251,19 @@ graph TD;
 - **Retry Policy**: maxAttempts: 3 (internal to subgraph)
 - **Timeline Sync**: Automatic message synchronization
 
-#### 2. prepareDML Node
+#### 2. generateDml Node
 - **Purpose**: Generates DML statements based on test cases for schema validation
-- **Performed by**: DML Generation Agent
+- **Performed by**: DML Generation Agent with GPT-5
 - **Retry Policy**: maxAttempts: 3 (internal to subgraph)
-- **Output**: Structured DML operations for testing
+- **Output**: AI-generated DML operations using tool calls
 
-#### 3. validateSchema Node
+#### 3. invokeSaveDmlTool Node
+- **Purpose**: Executes the saveDmlOperationsTool to save generated DML operations
+- **Performed by**: ToolNode with saveDmlOperationsTool
+- **Retry Policy**: maxAttempts: 3 (internal to subgraph)
+- **Tool Integration**: Saves DML operations to database for validation
+
+#### 4. validateSchema Node
 - **Purpose**: Executes DML statements and validates schema functionality
 - **Performed by**: DML Generation Agent with database execution
 - **Retry Policy**: maxAttempts: 3 (internal to subgraph)
@@ -262,8 +271,9 @@ graph TD;
 
 ### QA Agent Flow Patterns
 
-1. **Linear Testing Flow**: `START → generateTestcase → prepareDML → validateSchema → END`
-2. **Comprehensive Validation**: Each step builds upon the previous to ensure thorough testing
+1. **Direct Validation Flow**: `START → generateTestcase → generateDml → validateSchema → END` (when DML operations are generated directly)
+2. **Tool-based Flow**: `START → generateTestcase → generateDml → invokeSaveDmlTool → generateDml → validateSchema → END` (when tool calls are required)
+3. **Comprehensive Validation**: Each step builds upon the previous to ensure thorough testing with conditional routing
 
 ### QA Agent Benefits
 
@@ -290,7 +300,7 @@ graph.addNode('qaAgent', qaAgentSubgraph) // No retry policy - handled internall
 - **analyzeRequirements**: Routes to `saveRequirementToArtifact` when requirements are successfully analyzed, retries `analyzeRequirements` with retry count tracking (max 3 attempts), fallback to `finalizeArtifacts` when max retries exceeded
 - **saveRequirementToArtifact**: Always routes to `dbAgent` after processing artifacts (workflow termination node pattern)
 - **dbAgent**: DB Agent subgraph handles internal routing between designSchema and invokeSchemaDesignTool nodes, routes to `qaAgent` on completion
-- **qaAgent**: QA Agent subgraph handles internal routing between generateTestcase, prepareDML, and validateSchema nodes, always routes to `finalizeArtifacts` (conditional routing temporarily disabled)
+- **qaAgent**: QA Agent subgraph handles internal routing between generateTestcase, generateDml, invokeSaveDmlTool, and validateSchema nodes, always routes to `finalizeArtifacts`
 
 ## Timeline Synchronization
 

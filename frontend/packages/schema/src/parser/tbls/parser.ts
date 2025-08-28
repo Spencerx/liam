@@ -376,6 +376,7 @@ async function parseTblsSchema(schemaString: string): Promise<ProcessResult> {
       value: {
         tables: {},
         enums: {},
+        extensions: {},
       },
       errors: [
         new Error(`Invalid schema format: ${JSON.stringify(result.error)}`),
@@ -425,6 +426,7 @@ async function parseTblsSchema(schemaString: string): Promise<ProcessResult> {
     value: {
       tables,
       enums,
+      extensions: {},
     },
     errors,
   }

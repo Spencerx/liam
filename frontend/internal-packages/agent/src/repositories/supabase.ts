@@ -174,7 +174,7 @@ export class SupabaseSchemaRepository implements SchemaRepository {
       typeof buildingSchema.initial_schema_snapshot === 'object' &&
       buildingSchema.initial_schema_snapshot !== null
         ? JSON.parse(JSON.stringify(buildingSchema.initial_schema_snapshot))
-        : { tables: {}, enums: {} }
+        : { tables: {}, enums: {}, extensions: {} }
 
     for (const version of versions) {
       const patchParsed = v.safeParse(operationsSchema, version.patch)
@@ -209,7 +209,7 @@ export class SupabaseSchemaRepository implements SchemaRepository {
     const validationResult = v.safeParse(schemaSchema, currentSchema)
     if (!validationResult.success) {
       // Schema validation failed, using fallback schema
-      return { tables: {}, enums: {} }
+      return { tables: {}, enums: {}, extensions: {} }
     }
 
     return validationResult.output

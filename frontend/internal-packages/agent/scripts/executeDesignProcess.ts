@@ -44,6 +44,7 @@ const createWorkflowState = (
   const sampleSchema: Schema = {
     tables: {},
     enums: {},
+    extensions: {},
   }
 
   // Use custom user input if provided, otherwise use default

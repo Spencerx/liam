@@ -40,6 +40,7 @@ const createWorkflowStateForDeepModeling = (
   const sampleSchema: Schema = {
     tables: {},
     enums: {},
+    extensions: {},
   }
 
   const userInput = customUserInput || getBusinessManagementSystemUserInput()

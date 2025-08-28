@@ -26,6 +26,7 @@ describe('evaluateSchema', () => {
 
   const mockSchema: Schema = {
     enums: {},
+    extensions: {},
     tables: {
       users: {
         name: 'users',

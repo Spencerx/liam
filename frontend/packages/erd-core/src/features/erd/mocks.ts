@@ -91,6 +91,7 @@ export const mockPreviousSchema = aSchema({
     // posts table will be "added" in diff
   },
   enums: {},
+  extensions: {},
 })
 
 export const mockAddedTableSchema: SchemaProviderValue = {
@@ -157,6 +158,7 @@ export const mockRemovedTableSchema: SchemaProviderValue = {
   previous: mockPreviousSchema,
   current: aSchema({
     tables: {},
+    extensions: {},
   }),
 }
 

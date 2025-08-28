@@ -1,12 +1,16 @@
+import { dispatchCustomEvent } from '@langchain/core/callbacks/dispatch'
 import {
-  type AIMessage,
+  AIMessage,
+  AIMessageChunk,
   type BaseMessage,
   SystemMessage,
 } from '@langchain/core/messages'
 import { ChatOpenAI } from '@langchain/openai'
-import { ok, ResultAsync } from 'neverthrow'
+import { fromAsyncThrowable } from '@liam-hq/neverthrow'
+import { ResultAsync } from 'neverthrow'
 import * as v from 'valibot'
 import type { WorkflowConfigurable } from '../chat/workflow/types'
+import { SSE_EVENTS } from '../client'
 import { reasoningSchema } from '../langchain/utils/schema'
 import type { Reasoning } from '../langchain/utils/types'
 import { removeReasoningFromMessages } from '../utils/messageCleanup'
@@ -15,6 +19,8 @@ import {
   pmAnalysisPrompt,
 } from './prompts/pmAnalysisPrompts'
 import { saveRequirementsToArtifactTool } from './tools/saveRequirementsToArtifactTool'
+
+const AGENT_NAME = 'pm' as const
 
 type AnalysisWithReasoning = {
   response: AIMessage
@@ -40,6 +46,7 @@ export const invokePmAnalysisAgent = (
     model: 'gpt-5',
     reasoning: { effort: 'medium', summary: 'detailed' },
     useResponsesApi: true,
+    streaming: true,
   }).bindTools(
     [{ type: 'web_search_preview' }, saveRequirementsToArtifactTool],
     {
@@ -48,24 +55,57 @@ export const invokePmAnalysisAgent = (
     },
   )
 
-  const invoke = ResultAsync.fromThrowable(
-    (systemPrompt: string) =>
-      model.invoke([new SystemMessage(systemPrompt), ...cleanedMessages], {
-        configurable,
-      }),
-    (error) => (error instanceof Error ? error : new Error(String(error))),
+  const invoke = fromAsyncThrowable((systemPrompt: string) =>
+    model.stream([new SystemMessage(systemPrompt), ...cleanedMessages], {
+      configurable,
+    }),
   )
 
-  return formatPrompt.andThen(invoke).andThen((response) => {
-    const parsedReasoning = v.safeParse(
-      reasoningSchema,
-      response.additional_kwargs['reasoning'],
-    )
-    const reasoning = parsedReasoning.success ? parsedReasoning.output : null
+  return formatPrompt.andThen(invoke).andThen((stream) => {
+    return ResultAsync.fromPromise(
+      (async () => {
+        // OpenAI ("chatcmpl-...") and LangGraph ("run-...") use different id formats,
+        // so we overwrite with a UUID to unify chunk ids for consistent handling.
+        const id = crypto.randomUUID()
+        let accumulatedChunk: AIMessageChunk | null = null
 
-    return ok({
-      response,
-      reasoning,
-    })
+        for await (const _chunk of stream) {
+          const chunk = new AIMessageChunk({ ..._chunk, id, name: AGENT_NAME })
+          await dispatchCustomEvent(SSE_EVENTS.MESSAGES, chunk)
+
+          // Accumulate chunks using concat method
+          accumulatedChunk = accumulatedChunk
+            ? accumulatedChunk.concat(chunk)
+            : chunk
+        }
+
+        // Convert the final accumulated chunk to AIMessage
+        // Note: AIMessageChunk.concat() doesn't preserve the name field,
+        // so we need to explicitly set it
+        const response = accumulatedChunk
+          ? new AIMessage({
+              id,
+              content: accumulatedChunk.content,
+              additional_kwargs: accumulatedChunk.additional_kwargs,
+              name: AGENT_NAME, // Always set name as concat() doesn't preserve it
+              ...(accumulatedChunk.tool_calls && {
+                tool_calls: accumulatedChunk.tool_calls,
+              }),
+            })
+          : new AIMessage({ id, content: '', name: AGENT_NAME })
+
+        const parsed = v.safeParse(
+          reasoningSchema,
+          accumulatedChunk?.additional_kwargs['reasoning'],
+        )
+        const reasoning = parsed.success ? parsed.output : null
+
+        return {
+          response,
+          reasoning,
+        }
+      })(),
+      (error) => (error instanceof Error ? error : new Error(String(error))),
+    )
   })
 }

@@ -707,6 +707,7 @@ class SchemaFinder extends Visitor {
         return acc
       }, {}),
       enums: {},
+      extensions: {},
     }
     return schema
   }

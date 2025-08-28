@@ -3,6 +3,7 @@ import type {
   Column,
   Enum,
   Enums,
+  Extensions,
   ForeignKeyConstraint,
   Index,
   PrimaryKeyConstraint,
@@ -104,7 +105,12 @@ const enums = (override?: Enums): Enums => {
   return override ?? {}
 }
 
+const extensions = (override?: Extensions): Extensions => {
+  return override ?? {}
+}
+
 export const aSchema = (override?: Partial<Schema>): Schema => ({
   tables: tables(override?.tables),
   enums: enums(override?.enums),
+  extensions: extensions(override?.extensions),
 })

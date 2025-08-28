@@ -50,6 +50,7 @@ describe(extractSchemaForTable, () => {
       comments,
     },
     enums: {},
+    extensions: {},
   }
 
   it('should extract related tables for the given table (primary table)', () => {
@@ -57,6 +58,7 @@ describe(extractSchemaForTable, () => {
     expect(result).toEqual({
       tables: { users, posts },
       enums: {},
+      extensions: {},
     })
   })
 
@@ -65,6 +67,7 @@ describe(extractSchemaForTable, () => {
     expect(result).toEqual({
       tables: { posts, comments },
       enums: {},
+      extensions: {},
     })
   })
 
@@ -72,11 +75,13 @@ describe(extractSchemaForTable, () => {
     const emptySchema: Schema = {
       tables: { users },
       enums: {},
+      extensions: {},
     }
     const result = extractSchemaForTable(users, emptySchema)
     expect(result).toEqual({
       tables: { users },
       enums: {},
+      extensions: {},
     })
   })
 })

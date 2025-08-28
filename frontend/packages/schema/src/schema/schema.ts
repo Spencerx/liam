@@ -138,10 +138,21 @@ export type Enum = v.InferOutput<typeof enumSchema>
 const enumsSchema = v.record(enumNameSchema, enumSchema)
 export type Enums = v.InferOutput<typeof enumsSchema>
 
+export const extensionNameSchema = v.string()
+
+export const extensionSchema = v.object({
+  name: extensionNameSchema,
+})
+export type Extension = v.InferOutput<typeof extensionSchema>
+
+const extensionsSchema = v.record(extensionNameSchema, extensionSchema)
+export type Extensions = v.InferOutput<typeof extensionsSchema>
+
 // Schema definition for the entire database structure
 export const schemaSchema = v.object({
   tables: tablesSchema,
   enums: enumsSchema,
+  extensions: extensionsSchema,
 })
 
 export type Schema = v.InferOutput<typeof schemaSchema>

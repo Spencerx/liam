@@ -22,6 +22,7 @@ export const SchemaProvider: FC<Props> = ({ children, current, previous }) => {
     const emptySchema: Schema = {
       tables: {},
       enums: {},
+      extensions: {},
     }
     const operations = getOperations(previous ?? emptySchema, current)
     const merged = previous ? mergeSchemas(previous, current) : current

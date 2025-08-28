@@ -120,6 +120,9 @@ export const PublicSessionDetailPage = async ({
         <SessionDetailPageClient
           buildingSchemaId={buildingSchemaId}
           designSessionWithTimelineItems={designSessionWithTimelineItems}
+          // TODO: Fetch actual messages using getMessages() once organizationId becomes optional in createSupabaseRepositories
+          // Currently blocked: Public sessions don't have organizationId, but createSupabaseRepositories requires it
+          initialMessages={[]}
           initialDisplayedSchema={initialSchema}
           initialPrevSchema={initialPrevSchema}
           initialVersions={versions
