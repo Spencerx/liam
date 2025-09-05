@@ -54,7 +54,6 @@ jobs:
           publish: pnpm run release
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
       - name: Trigger released_package_test.yml via API
         if: ${{ steps.changesets-action.outputs.published == 'true' }}
         run: |
