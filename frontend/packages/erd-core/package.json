@@ -33,7 +33,7 @@
     "@biomejs/biome": "2.2.6",
     "@liam-hq/configs": "workspace:*",
     "@liam-hq/schema": "workspace:*",
-    "@storybook/nextjs": "9.1.13",
+    "@storybook/nextjs": "9.1.15",
     "@testing-library/jest-dom": "6.9.1",
     "@testing-library/react": "16.3.0",
     "@testing-library/user-event": "14.6.1",

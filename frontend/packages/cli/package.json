@@ -42,7 +42,7 @@
   "devDependencies": {
     "@biomejs/biome": "2.2.6",
     "@liam-hq/configs": "workspace:*",
-    "@rollup/plugin-commonjs": "28.0.8",
+    "@rollup/plugin-commonjs": "28.0.9",
     "@rollup/plugin-node-resolve": "16.0.3",
     "@rollup/plugin-typescript": "12.1.4",
     "@types/node": "22.18.11",
